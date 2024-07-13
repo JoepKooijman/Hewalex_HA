@@ -302,8 +302,30 @@ Command topics (marked command) allow the sending of commands to topics to contr
 | Heatpump/Command/DefrostingStopTemp | te10 | Temperature finishing defrosting [2-30°C, factory setting 13°C]
 | Heatpump/DefrostingMaxTime | word | Maximum defrosting duration [1-12 min., factory setting 8 min.]
 | Heatpump/Command/DefrostingMaxTime | word | Maximum defrosting duration [1-12 min., factory setting 8 min.]
-| Heatpump/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
-| Heatpump/Command/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
+| Heatpump/HeaterEEnabled | bool | Electrical heater activation (True/False)
+| Heatpump/Command/HeaterEEnabled | bool | Electrical heater activation (True/False)
+| Heatpump/HeaterEHPONTemp | te10 | HUW temperature for electric heater if heat pump is on  [??°C, factory setting 45°C]
+| Heatpump/Command/HeaterEHPONTemp | te10 | HUW temperature for electric heater if heat pump is on [??°C, factory setting 55°C]
+| Heatpump/HeaterEHPOFFTemp | te10 | HUW temperature for electric heater if heat pump is off [??°C, factory setting ??°C]
+| Heatpump/Command/HeaterEHPOFFTemp | te10 | HUW temperature for electric heater if heat pump is off [??°C, factory setting 50°C]
+| Heatpump/HeaterEBlocked | bool | Electric Heater blocked when HP is on (True/False)
+| Heatpump/Command/HeaterEBlocked | bool | Electric Heater blocked when HP is on (True/False)
+| Heatpump/HeaterETimeProgramM-F | bool | Heater E Time Program M-F (True/False per hour of the day)
+| Heatpump/Command/HeaterETimeProgramM-F | ?? | Heater E Time Program M-F (True/False per hour of the day)
+| Heatpump/HeaterETimeProgramSat | ?? | Heater E Time Program Sat (True/False per hour of the day)
+| Heatpump/Command/HeaterETimeProgramSat | ?? | Heater E Time Program Sat (True/False per hour of the day)
+| Heatpump/HeaterETimeProgramSun | ?? | Heater E Time Program Sun (True/False per hour of the day)
+| Heatpump/Command/HeaterETimeProgramSun | bool | Heater E Time Program Sun (True/False per hour of the day)
+| Heatpump/AntiLegionellaEnabled | bool | Anti-Legionella Enabled (True/False)
+| Heatpump/Command/AntiLegionellaEnabled | bool | Anti-Legionella Enabled (True/False)
+| Heatpump/AntiLegionellaUseHeaterE | bool | Anti-Legionella Use Heater E (True/False)
+| Heatpump/Command/AntiLegionellaUseHeaterE | bool | Anti-Legionella Use Heater E (True/False)
+| Heatpump/AntiLegionellaUseHeaterP | bool | Anti-Legionella Use Heater P (True/False)
+| Heatpump/Command/AntiLegionellaUseHeaterP | bool | Anti-Legionella Use Heater P (True/False)
+| Heatpump/ExtControllerHPOFF | bool | Ext Controller Heat pump deactivation (True/False)
+| Heatpump/Command/ExtControllerHPOFF | bool | Ext Controller Heat pump deactivation (True/False)
+| Heatpump/ExtControllerHeaterEOFF | bool | Ext Controller Electric heater deactivation (True/False)
+| Heatpump/Command/ExtControllerHeaterEOFF | bool | Ext Controller Electric heater deactivation (True/False)
 
 ### Examples
 Turn off heat pump

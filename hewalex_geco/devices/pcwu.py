@@ -58,8 +58,9 @@ class PCWU(BaseDevice):
         ]},
         198: { 'type': 'word', 'name': 'EV1', 'desc': 'Expansion valve' },
         202: { 'type': 'word', 'name': 'WaitingStatus', 'desc': ' 0 when available for operation, 2 when disabled through register 304' },               #
+        206: { 'type': 'word', 'name': 'WaitingTimer', 'desc': 'Timer counting down to 0 when just stopped and waiting to be available for operation again' },
 
-        # Config registers
+        # Config registers - Heat Pump
         302: { 'type': 'word', 'name': 'InstallationScheme', 'options': [1,2,3,4,5,6,7,8,9], 'desc': 'Installation Scheme (1-9)' },
         304: { 'type': 'bool', 'name': 'HeatPumpEnabled', 'options': [0,1], 'desc': 'Heat Pump Enabled (True/False)'},
         306: { 'type': 'word', 'name': 'TapWaterSensor', 'options': [0,1,2], 'desc': 'Temp. sensor controlling heat pump operation [T2,T3,T7, factory setting T2]' },                                  #
@@ -84,22 +85,35 @@ class PCWU(BaseDevice):
         336: { 'type': 'te10', 'name': 'DefrostingStopTemp', 'desc': 'Temperature finishing defrosting [2-30°C, factory setting 13°C]' }, 
         338: { 'type': 'word', 'name': 'DefrostingMaxTime', 'desc': 'Maximum defrosting duration [1-12 min., factory setting 8 min.]' },
 
-        #374                                                            # Time Program? Heat pump
-        #406                                                            # Time Program? Heater E
-        #432                                                            # Time Program? Circulating pump [shown in diagrams no. 2,3,4,6,7,8,9]
-        #476                                                            # Time Program? Gas-fired boiler D [shown in diagrams no. 4,7,9]
+        # Config registers - Heater E
+        364: { 'type': 'bool', 'name': 'HeaterEEnabled', 'options': [0,1], 'desc': 'Heater E Enabled (True/False)' },
+        366: { 'type': 'te10', 'name': 'HeaterEHPONTemp', 'options':  [100,110,112,130,140,150,160,170,180,190,    #
+                                                                    200,210,220,230,240,250,260,270,280,290,
+                                                                    300,310,320,330,340,350,360,370,380,390,
+                                                                    400,410,420,430,440,450,460,470,480,490,
+                                                                    500,510,520,530,540,550,560,570,580,590,
+                                                                    600] , 'desc': 'Heater E water temp when HP ON (45.0)' },
+        368: { 'type': 'te10', 'name': 'HeaterEHPOFFTemp', 'options':  [100,110,112,130,140,150,160,170,180,190,    #
+                                                                    200,210,220,230,240,250,260,270,280,290,
+                                                                    300,310,320,330,340,350,360,370,380,390,
+                                                                    400,410,420,430,440,450,460,470,480,490,
+                                                                    500,510,520,530,540,550,560,570,580,590,
+                                                                    600] , 'desc': 'Heater E water temp when HP OFF (55.0)' },
+        370: { 'type': 'bool', 'name': 'HeaterEBlocked', 'options': [0,1], 'desc': 'Heater E blocked when HP ON? (True/False)' },
+        374: { 'type': 'tprg', 'name': 'HeaterETimeProgramM-F', 'desc': 'Heater E Time Program M-F (True/False per hour of the day)' },
+        378: { 'type': 'tprg', 'name': 'HeaterETimeProgramSat', 'desc': 'Heater E Time Program Sat (True/False per hour of the day)' },
+        382: { 'type': 'tprg', 'name': 'HeaterETimeProgramSun', 'desc': 'Heater E Time Program Sun (True/False per hour of the day)' },
 
-        #???                                                            # Anti-Legionella [shown in diagrams no. 3-9]
-        #???                                                            # Anti-Legionella function activation [YES/NO, factory setting YES]
-        #???                                                            # Protection carried out by heater E [YES/NO, factory setting YES]
-        #???                                                            # Protection carried out by heater P [YES/NO, factory setting YES]
-        #???                                                            # Protection carried out by gas-fired boiler [YES/NO, factory setting YES, shown in diagrams no. 4,7,9]
-
-        516: { 'type': 'bool', 'name': 'ExtControllerHPOFF', 'desc': 'Heat pump deactivation [YES/NO, factory setting YES]' },          
-        #518                                                            # ?? Electric heater E deactivation [YES/NO, factory setting YES]
-        #520                                                            # ?? Electric heater P deactivation [YES/NO, factory setting YES]
-        #522                                                            # ?? Gas-fired boiler shutdown [YES/NO, factory setting YES, shown in diagrams no. 4,7,9]
-        #524                                                            # ?? Shutdown of pump F for solid fuel fired boiler B [YES/NO, factory setting YES, shown in diagrams no. 3,8,9]
+        # Config registers - Anti-Legionella
+        498: { 'type': 'bool', 'name': 'AntiLegionellaEnabled', 'options': [0,1], 'desc': 'Anti-Legionella Enabled (True/False)' },
+        500: { 'type': 'bool', 'name': 'AntiLegionellaUseHeaterE', 'options': [0,1], 'desc': 'Anti-Legionella Use Heater E (True/False)' },
+        502: { 'type': 'bool', 'name': 'AntiLegionellaUseHeaterP', 'options': [0,1], 'desc': 'Anti-Legionella Use Heater P (True/False)' },
+        
+        # Config registers - Ext Controller
+        516: { 'type': 'bool', 'name': 'ExtControllerHPOFF', 'options': [0,1], 'desc': 'Ext Controller HP OFF (True/False)' },
+        518: { 'type': 'bool', 'name': 'ExtControllerHeaterEOFF', 'options': [0,1], 'desc': 'Ext Controller Heater E OFF (True/False)' },
+        522: { 'type': 'bool', 'name': 'ExtControllerPumpFOFF', 'options': [0,1], 'desc': 'Ext Controller Pump F OFF (True/False)' },
+        524: { 'type': 'bool', 'name': 'ExtControllerHeaterPOFF', 'options': [0,1], 'desc': 'Ext Controller Heater P OFF (True/False)' },      
 
     }
 
