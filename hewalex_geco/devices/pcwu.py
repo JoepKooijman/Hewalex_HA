@@ -100,9 +100,9 @@ class PCWU(BaseDevice):
                                                                     500,510,520,530,540,550,560,570,580,590,
                                                                     600] , 'desc': 'Heater E water temp when HP OFF (55.0)' },
         370: { 'type': 'bool', 'name': 'HeaterEBlocked', 'options': [0,1], 'desc': 'Heater E blocked when HP ON? (True/False)' },
-        374: { 'type': 'tprg', 'name': 'HeaterETimeProgramM-F', 'options': [0,1], 'desc': 'Heater E Time Program M-F (True/False per hour of the day)' },
-        378: { 'type': 'tprg', 'name': 'HeaterETimeProgramSat', 'options': [0,1], 'desc': 'Heater E Time Program Sat (True/False per hour of the day)' },
-        382: { 'type': 'tprg', 'name': 'HeaterETimeProgramSun', 'options': [0,1], 'desc': 'Heater E Time Program Sun (True/False per hour of the day)' },
+        374: { 'type': 'tprg', 'name': 'HeaterETimeProgramM-F', 'desc': 'Heater E Time Program M-F (True/False per hour of the day)' },
+        378: { 'type': 'tprg', 'name': 'HeaterETimeProgramSat', 'desc': 'Heater E Time Program Sat (True/False per hour of the day)' },
+        382: { 'type': 'tprg', 'name': 'HeaterETimeProgramSun', 'desc': 'Heater E Time Program Sun (True/False per hour of the day)' },
 
         # Config registers - Anti-Legionella
         498: { 'type': 'bool', 'name': 'AntiLegionellaEnabled', 'options': [0,1], 'desc': 'Anti-Legionella Enabled (True/False)' },
