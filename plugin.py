@@ -133,25 +133,6 @@ class BasePlugin:
                 if newValue != Devices[4].nValue:
                     Devices[4].Update(nValue=newValue, sValue="")
 
-    def onMessageZPS(self, dev, h, sh, m):
-        Domoticz.Debug("onMessageZPS called")
-        if (sh["FNC"] == 0x50):
-            mp = dev.parseRegisters(sh["RestMessage"], sh["RegStart"], sh["RegLen"])
-            if 'T1' in mp:
-                Devices[1].Update(nValue=0, sValue=str(mp['T1']))
-            if 'T2' in mp:
-                Devices[2].Update(nValue=0, sValue=str(mp['T2']))
-            if 'T3' in mp:
-                Devices[3].Update(nValue=0, sValue=str(mp['T3']))
-            if 'T4' in mp:
-                Devices[4].Update(nValue=0, sValue=str(mp['T4']))
-            if 'TotalEnergy' in mp:
-                Devices[5].Update(nValue=0, sValue=str(mp['TotalEnergy']))
-                if 'CollectorPower' in mp:
-                    Devices[6].Update(nValue=0, sValue=str(mp['CollectorPower'])+";"+str(mp['TotalEnergy'] * 1000))
-            if 'Consumption' in mp:
-                Devices[7].Update(nValue=0, sValue=str(mp['Consumption'])+";0")
-
     def onCommand(self, Unit, Command, Level, Hue):
         Domoticz.Debug("onCommand called for unit %d with command %s, level %s." % (Unit, Command, Level))
         if (Unit == 4) and (Command == "On") and (self.devMode == 2):
