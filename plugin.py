@@ -52,7 +52,7 @@
 import serial
 import Domoticz
 
-from hewalex_geco.devices import PCWU, ZPS
+from hewalex_geco.devices import PCWU
 
 
 class BasePlugin:
