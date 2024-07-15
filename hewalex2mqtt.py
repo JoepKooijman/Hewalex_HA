@@ -2,7 +2,7 @@ import os
 import threading
 import configparser
 import serial
-from hewalex_geco.devices import PCWU, ZPS
+from hewalex_geco.devices import PCWU
 import paho.mqtt.client as mqtt
 import logging
 import sys
