@@ -1,6 +1,6 @@
-FROM python:3.7-alpine
+FROM python:3.7-alpine/
 
-COPY ./requirements.txt /requirements.txt
+COPY ./requirements.txt requirements.txt
 RUN pip3 install -r /requirements.txt && rm requirements.txt
 
 COPY  ./hewalex_geco/ ./hewagate/hewalex_geco/
@@ -9,4 +9,4 @@ COPY ./*.py ./hewagate/
 
 RUN ls -la /hewagate/*
 
-ENTRYPOINT [ "python3", "/hewagate/hewalex2mqtt.py" ]
+ENTRYPOINT [ "python3", "/hewagate/hewalex.py" ]
