@@ -26,7 +26,9 @@ class PCWU:
         self.conSoftId = 1 # G-426 controller - logical address
         self.devHardId = 2 # Hewalex device - physical address
         self.devSoftId = 2 # Hewalex device - logical address
-        self.logger = logger
+
+        logger.info("--- Initialized sensors")
+
         mqttconnected = False
 
         while not mqttconnected:
@@ -456,9 +458,9 @@ class PCWU:
         #302: InstallationScheme -> word format not supported
         304: {'type': 'bool', 'id': 'HeatPumpEnabled', 'name':'Heat Pump','ha_type':'switch','options':[0,1]},
         # 306: TapWaterSensor -> word format not supported
-        308: {'type': 'te10', 'id': 'TapWaterTemp', 'name': 'Tap Water Temperature Setpoint', 'options': range(100,600),'ha_type':'number'},
-        310: {'type': 'te10', 'id': 'TapWaterHysteresis', 'name':'Tap Water Hysteresis','options': range(-20,100,10),'ha_type':'number'},
-        312: {'type': 'te10', 'id': 'AmbientMinTemp', 'name':'Ambient Minimal Temperature', 'options': range(-100,100,10),'ha_type':'number'},
+        308: {'type': 'te10', 'id': 'TapWaterTemp', 'name': 'Tap Water Temperature Setpoint', 'options': range(100,601,10),'ha_type':'number'},
+        310: {'type': 'te10', 'id': 'TapWaterHysteresis', 'name':'Tap Water Hysteresis','options': range(-20,101,10),'ha_type':'number'},
+        312: {'type': 'te10', 'id': 'AmbientMinTemp', 'name':'Ambient Minimal Temperature', 'options': range(-100,101,10),'ha_type':'number'},
         # 314: TimeProgramHPM-F -> tprg format not supported
         # 318: TimeProgramHPSat -> tprg format not supported
         # 322: 'TimeProgramHPSun -> tprg format not supported
@@ -466,14 +468,14 @@ class PCWU:
         # 328: 'WaterPumpOperationMode -> word format not supported
         # 330: 'FanOperationMode -> word format not supported
         # 332: DefrostingInterval -> word format not supported
-        334: {'type': 'te10', 'id': 'DefrostingStartTemp','name':'Defrosting Start Temperature','ha_type':'number','options':range(-300,0,10)},
-        336: {'type': 'te10', 'id': 'DefrostingStopTemp','name':'Defrosting Stop Temperature','ha_type':'number','options':range(20,300,10)},
+        334: {'type': 'te10', 'id': 'DefrostingStartTemp','name':'Defrosting Start Temperature','ha_type':'number','options':range(-301,0,10)},
+        336: {'type': 'te10', 'id': 'DefrostingStopTemp','name':'Defrosting Stop Temperature','ha_type':'number','options':range(20,301,10)},
         #338: 'DefrostingMaxTime' -> word format not supported
         #
         # Config registers - Heater E
         364: {'type': 'bool', 'id': 'HeaterEEnabled','name': 'Electric Heater Enabled','ha_type':'switch','options':[0,1]},
-        366: {'type': 'te10', 'id': 'HeaterEHPONTemp','name':'Electric Heater Temperature HPON','ha_type':'number','options':range(300,600,10)},
-        368: {'type': 'te10', 'id': 'HeaterEHPOFFTemp','name':'Electric Heater Temperature HPOFF','ha_type':'number','options':range(300,600,10)},
+        366: {'type': 'te10', 'id': 'HeaterEHPONTemp','name':'Electric Heater Temperature HPON','ha_type':'number','options':range(300,601,10)},
+        368: {'type': 'te10', 'id': 'HeaterEHPOFFTemp','name':'Electric Heater Temperature HPOFF','ha_type':'number','options':range(300,601,10)},
         370: {'type': 'bool', 'id': 'HeaterEBlocked','name':'Electric Heater Blocked','ha_type':'switch','options':[0,1]},
         # 374: HeaterETimeProgramM-F -> tprg format not supported
         # 378: HeaterETimeProgramSat -> tprg format not supported
