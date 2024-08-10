@@ -14,7 +14,6 @@ logger.addHandler(stream_handler)
 logger.info('Starting Hewalex MQTT HA Integration')
 
 def initPCWU():
-    logger.info("reading config")
     config_file = os.path.join(os.path.dirname(__file__), 'hewalexconfig.ini')
     dev = PCWU(config_file,logger)
 
