@@ -3,8 +3,10 @@ from ha_mqtt_discoverable import Settings, DeviceInfo
 from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, Sensor, SensorInfo, Switch, SwitchInfo, Number, NumberInfo
 import configparser
 import serial
+import time
 from paho.mqtt.client import Client, MQTTMessage
 from threading import Timer
+import threading
 
 # Based on work by krzysztof1111111111
 # https://www.elektroda.pl/rtvforum/topic3499254.html
@@ -27,69 +29,96 @@ class PCWU:
         self.devHardId = 2 # Hewalex device - physical address
         self.devSoftId = 2 # Hewalex device - logical address
         self.logger = logger
-        mqttconnected = False
+        self.mqtt_settings = Settings.MQTT(host=MQTT_ip, port=MQTT_port, username=MQTT_user, password=MQTT_pass)
+        # define device information
+        self.device_info = DeviceInfo(name="Hewalex", identifiers="hewalex_pcwu", model="PCWU",
+                                      manufacturer="Hewalex")
+        self.mqttconnected = False
+        self.SerialConnected = False
 
-        while not mqttconnected:
-            try:
-                self.mqtt_settings = Settings.MQTT(host=MQTT_ip, port=MQTT_port, username=MQTT_user, password=MQTT_pass)
-                # define device information
-                self.device_info = DeviceInfo(name="Hewalex", identifiers="hewalex_pcwu",model="PCWU",manufacturer="Hewalex")
-
-                # initialize sensors
-                for register,data in self.StatusRegisters.items():
-                    if data['ha_type'] == 'sensor':
-                        sensor_info = SensorInfo(name=data["name"], unit_of_measurement=data["unit"], unique_id=data["id"], device=self.device_info)
-                        settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
-                        data["sensor"] = Sensor(settings)
-                    elif data['ha_type'] == 'binarysensor':
-                        sensor_info = BinarySensorInfo(name=data["name"], unique_id=data["id"], device=self.device_info)
-                        settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
-                        data["sensor"] = BinarySensor(settings)
-                    elif data['ha_type'] == 'binarysensors':
-                        for idx in range(len(data["id"])):
-                            if data["id"][idx] is not None:
-                                sensor_info = BinarySensorInfo(name=data["name"][idx], unique_id=data["id"][idx], device=self.device_info)
-                                settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
-                                data["sensor"][idx] = BinarySensor(settings)
-
-                # initialize configurations
-                for register, data in self.ConfigRegisters.items():
-                    if data['ha_type'] == 'switch':
-                        switch_info = SwitchInfo(name=data["name"], unique_id=data["id"], device=self.device_info)
-                        settings = Settings(mqtt=self.mqtt_settings, entity=switch_info)
-                        data["switch"] = Switch(settings, self.HACallbackSwitch, data["id"])
-                    elif data['ha_type'] == 'number':
-                        number_info = NumberInfo(name=data["name"],unique_id=data["id"],min=int(data["options"][0])/10, max=int(data["options"][-1])/10, device=self.device_info)
-                        settings = Settings(mqtt=self.mqtt_settings, entity=number_info)
-                        data["number"] = Number(settings, self.HACallbackNumber, data["id"])
-                logger.info("--- Initialized sensors")
-                mqttconnected = True
-            except Exception as err:
-                self.logger.info("Error occured during initialization of sensors to HA")
-                self.logger.info("An exception occurred:" + str(err))
         # start thread to update sensors and listen to activities
         self.run()
 
     def run(self):
         self.is_running = False
         self.start()
-        self.UpdateStatus()
+        if not self.mqttconnected:
+            self.ConfigureMQTT()
+        if self.mqttconnected:
+            self.UpdateStatus()
     def start(self):
         if not self.is_running:
             self.timer = Timer(self.status_interval, self.run)
             self.timer.start()
             self.is_running = True
+
+    def ConfigureMQTT(self):
+        try:
+            # initialize sensors
+            for register, data in self.StatusRegisters.items():
+                if data['ha_type'] == 'sensor':
+                    sensor_info = SensorInfo(name=data["name"], unit_of_measurement=data["unit"], unique_id=data["id"],
+                                             device=self.device_info)
+                    settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
+                    data["sensor"] = Sensor(settings)
+                elif data['ha_type'] == 'binarysensor':
+                    sensor_info = BinarySensorInfo(name=data["name"], unique_id=data["id"], device=self.device_info)
+                    settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
+                    data["sensor"] = BinarySensor(settings)
+                elif data['ha_type'] == 'binarysensors':
+                    for idx in range(len(data["id"])):
+                        if data["id"][idx] is not None:
+                            sensor_info = BinarySensorInfo(name=data["name"][idx], unique_id=data["id"][idx],
+                                                           device=self.device_info)
+                            settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
+                            data["sensor"][idx] = BinarySensor(settings)
+
+            # initialize configurations
+            for register, data in self.ConfigRegisters.items():
+                if data['ha_type'] == 'switch':
+                    switch_info = SwitchInfo(name=data["name"], unique_id=data["id"], device=self.device_info)
+                    settings = Settings(mqtt=self.mqtt_settings, entity=switch_info)
+                    data["switch"] = Switch(settings, self.HACallbackSwitch, data["id"])
+                elif data['ha_type'] == 'number':
+                    number_info = NumberInfo(name=data["name"], unique_id=data["id"], min=int(data["options"][0]) / 10,
+                                             max=int(data["options"][-1]) / 10, device=self.device_info)
+                    settings = Settings(mqtt=self.mqtt_settings, entity=number_info)
+                    data["number"] = Number(settings, self.HACallbackNumber, data["id"])
+            self.logger.info("--- Initialized sensors")
+            self.mqttconnected = True
+        except Exception as err:
+            self.logger.info("Error occured during initialization of sensors to HA")
+            self.logger.info("An exception occurred:" + str(err))
+            self.mqttconnected = False
+
     def UpdateStatus(self):
         try:
             # Poll status of sensors
-            self.ser = serial.serial_for_url("socket://%s:%s" % (self.PCWU_Address, self.PCWU_Port))
-            self.ser.close()
-            self.ser.open()
-            self.readStatusRegisters(self.ser)
-            self.readConfigRegisters(self.ser)
-            self.ser.close()
+            iteration = 0
+            updated = False
+            MaxNumberOfTries = 10
+            while (iteration <= MaxNumberOfTries and not updated):
+                if not self.SerialConnected:
+                    self.SerialConnected = True
+                    self.ser = serial.serial_for_url("socket://%s:%s" % (self.PCWU_Address, self.PCWU_Port))
+                    #self.ser.open()
+                    self.readStatusRegisters(self.ser)
+                    self.readConfigRegisters(self.ser)
+                    self.ser.close()
+                    self.SerialConnected = False
+                    updated = True
+                else:
+                    self.logger.info("-- Wait on other thread")
+                    time.sleep(1)
+                    iteration = iteration + 1
+            if (iteration > MaxNumberOfTries):
+                raise Exception("Could not connect")
         except Exception as err:
-            self.logger.info("An exception occurred:"+str(err))
+            # Assume all connections are lost to force reconfiguration
+            self.logger.info("Error occured during readout of the sensors")
+            self.logger.info("An exception occurred:" + str(err))
+            self.SerialConnected = False
+            self.mqttconnected = False
 
     def parseHardHeader(self, m):
         if len(m) < 8:
@@ -269,32 +298,79 @@ class PCWU:
                 elif reg['ha_type'] == 'number':
                     self.logger.info(reg['name'] + ' = ' + str(item[1]))
                     reg['number'].set_value(item[1])
+
     def HACallbackSwitch(self,client: Client, reg, message: MQTTMessage):
-        payload = message.payload.decode()
-        self.logger.info(reg+': '+payload)
-        self.ser = serial.serial_for_url("socket://%s:%s" % (self.PCWU_Address, self.PCWU_Port))
-        self.ser.close()
-        self.ser.open()
-        if payload == "ON":
-            self.write(self.ser, reg, 'True')
-        elif payload == "OFF":
-            self.write(self.ser, reg, 'False')
-        else:
-            self.logger.info("Unrecognized payload",payload)
-        self.readConfigRegisters(self.ser)
-        self.readStatusRegisters(self.ser)
-        self.ser.close()
+        ThreadSwitch = threading.Thread(target=self.HACallbackSwitchThread, args=(client,reg,message))
+        ThreadSwitch.start()
+
+    def HACallbackSwitchThread(self,client: Client, reg, message: MQTTMessage):
+        try:
+            payload = message.payload.decode()
+            self.logger.info("-------------------------")
+            self.logger.info(reg+': '+payload)
+            iteration = 0
+            responded = False
+            MaxNumberOfTries = 10
+            while(iteration <= MaxNumberOfTries and not responded):
+                if not self.SerialConnected:
+                    self.SerialConnected = True
+                    self.ser = serial.serial_for_url("socket://%s:%s" % (self.PCWU_Address, self.PCWU_Port))
+                    if payload == "ON":
+                        self.write(self.ser, reg, 'True')
+                    elif payload == "OFF":
+                        self.write(self.ser, reg, 'False')
+                    else:
+                        self.logger.info("Unrecognized payload",payload)
+                    self.readConfigRegisters(self.ser)
+                    self.readStatusRegisters(self.ser)
+                    self.ser.close()
+                    self.SerialConnected = False
+                    responded = True
+                else:
+                    self.logger.info("-- Wait on other thread")
+                    time.sleep(1)
+                    iteration=iteration+1
+            if(iteration>MaxNumberOfTries):
+                raise Exception("Could not connect")
+        except Exception as err:
+            self.logger.info("Error occured during response to switch")
+            self.logger.info("An exception occurred:" + str(err))
+            self.SerialConnected = False
+            self.mqttconnected = False
 
     def HACallbackNumber(self,client: Client, reg, message: MQTTMessage):
-        payload = message.payload.decode()
-        self.logger.info(reg+': '+payload)
-        self.ser = serial.serial_for_url("socket://%s:%s" % (self.PCWU_Address, self.PCWU_Port))
-        self.ser.close()
-        self.ser.open()
-        self.write(self.ser, reg, str(payload))
-        self.readConfigRegisters(self.ser)
-        self.readStatusRegisters(self.ser)
-        self.ser.close()
+        ThreadNumber = threading.Thread(target=self.HACallbackNumberThread, args=(client,reg,message))
+        ThreadNumber.start()
+    def HACallbackNumberThread(self,client: Client, reg, message: MQTTMessage):
+        try:
+            payload = message.payload.decode()
+            self.logger.info("-------------------------")
+            self.logger.info(reg+': '+payload)
+            iteration = 0
+            responded = False
+            MaxNumberOfTries = 10
+            while (iteration <= MaxNumberOfTries and not responded):
+                if not self.SerialConnected:
+                    self.SerialConnected = True
+                    self.ser = serial.serial_for_url("socket://%s:%s" % (self.PCWU_Address, self.PCWU_Port))
+                    #self.ser.open()
+                    self.write(self.ser, reg, str(payload))
+                    self.readConfigRegisters(self.ser)
+                    self.readStatusRegisters(self.ser)
+                    self.ser.close()
+                    self.SerialConnected = False
+                    responded = True
+                else:
+                    self.logger.info("-- Wait on other thread")
+                    time.sleep(1)
+                    iteration = iteration + 1
+            if (iteration > MaxNumberOfTries):
+                raise Exception("Could not connect")
+        except Exception as err:
+            self.logger.info("Error occured during response to number")
+            self.logger.info("An exception occurred:" + str(err))
+            self.SerialConnected = False
+            self.mqttconnected = False
 
     def processAllMessages(self, m, returnRemainingBytes=False):
         minLen = 8 if returnRemainingBytes else 0
@@ -456,9 +532,9 @@ class PCWU:
         #302: InstallationScheme -> word format not supported
         304: {'type': 'bool', 'id': 'HeatPumpEnabled', 'name':'Heat Pump','ha_type':'switch','options':[0,1]},
         # 306: TapWaterSensor -> word format not supported
-        308: {'type': 'te10', 'id': 'TapWaterTemp', 'name': 'Tap Water Temperature Setpoint', 'options': range(100,600),'ha_type':'number'},
-        310: {'type': 'te10', 'id': 'TapWaterHysteresis', 'name':'Tap Water Hysteresis','options': range(-20,100,10),'ha_type':'number'},
-        312: {'type': 'te10', 'id': 'AmbientMinTemp', 'name':'Ambient Minimal Temperature', 'options': range(-100,100,10),'ha_type':'number'},
+        308: {'type': 'te10', 'id': 'TapWaterTemp', 'name': 'Tap Water Temperature Setpoint', 'options': range(100,601,10),'ha_type':'number'},
+        310: {'type': 'te10', 'id': 'TapWaterHysteresis', 'name':'Tap Water Hysteresis','options': range(-20,101,10),'ha_type':'number'},
+        312: {'type': 'te10', 'id': 'AmbientMinTemp', 'name':'Ambient Minimal Temperature', 'options': range(-100,101,10),'ha_type':'number'},
         # 314: TimeProgramHPM-F -> tprg format not supported
         # 318: TimeProgramHPSat -> tprg format not supported
         # 322: 'TimeProgramHPSun -> tprg format not supported
@@ -466,14 +542,14 @@ class PCWU:
         # 328: 'WaterPumpOperationMode -> word format not supported
         # 330: 'FanOperationMode -> word format not supported
         # 332: DefrostingInterval -> word format not supported
-        334: {'type': 'te10', 'id': 'DefrostingStartTemp','name':'Defrosting Start Temperature','ha_type':'number','options':range(-300,0,10)},
-        336: {'type': 'te10', 'id': 'DefrostingStopTemp','name':'Defrosting Stop Temperature','ha_type':'number','options':range(20,300,10)},
+        334: {'type': 'te10', 'id': 'DefrostingStartTemp','name':'Defrosting Start Temperature','ha_type':'number','options':range(-301,0,10)},
+        336: {'type': 'te10', 'id': 'DefrostingStopTemp','name':'Defrosting Stop Temperature','ha_type':'number','options':range(20,301,10)},
         #338: 'DefrostingMaxTime' -> word format not supported
         #
         # Config registers - Heater E
         364: {'type': 'bool', 'id': 'HeaterEEnabled','name': 'Electric Heater Enabled','ha_type':'switch','options':[0,1]},
-        366: {'type': 'te10', 'id': 'HeaterEHPONTemp','name':'Electric Heater Temperature HPON','ha_type':'number','options':range(300,600,10)},
-        368: {'type': 'te10', 'id': 'HeaterEHPOFFTemp','name':'Electric Heater Temperature HPOFF','ha_type':'number','options':range(300,600,10)},
+        366: {'type': 'te10', 'id': 'HeaterEHPONTemp','name':'Electric Heater Temperature HPON','ha_type':'number','options':range(300,601,10)},
+        368: {'type': 'te10', 'id': 'HeaterEHPOFFTemp','name':'Electric Heater Temperature HPOFF','ha_type':'number','options':range(300,601,10)},
         370: {'type': 'bool', 'id': 'HeaterEBlocked','name':'Electric Heater Blocked','ha_type':'switch','options':[0,1]},
         # 374: HeaterETimeProgramM-F -> tprg format not supported
         # 378: HeaterETimeProgramSat -> tprg format not supported
