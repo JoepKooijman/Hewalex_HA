@@ -88,7 +88,7 @@ class PCWU:
             self.mqttconnected = True
         except Exception as err:
             self.logger.info("Error occured during initialization of sensors to HA")
-            self.logger.info("An exception occurred:" + str(err))
+            self.logger.exception(err)
             self.mqttconnected = False
 
     def UpdateStatus(self):
@@ -116,7 +116,7 @@ class PCWU:
         except Exception as err:
             # Assume all connections are lost to force reconfiguration
             self.logger.info("Error occured during readout of the sensors")
-            self.logger.info("An exception occurred:" + str(err))
+            self.logger.exception(err)
             self.SerialConnected = False
             self.mqttconnected = False
 
@@ -334,7 +334,7 @@ class PCWU:
                 raise Exception("Could not connect")
         except Exception as err:
             self.logger.info("Error occured during response to switch")
-            self.logger.info("An exception occurred:" + str(err))
+            self.logger.exception(err)
             self.SerialConnected = False
             self.mqttconnected = False
 
@@ -368,7 +368,7 @@ class PCWU:
                 raise Exception("Could not connect")
         except Exception as err:
             self.logger.info("Error occured during response to number")
-            self.logger.info("An exception occurred:" + str(err))
+            self.logger.exception(err)
             self.SerialConnected = False
             self.mqttconnected = False
 
