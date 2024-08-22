@@ -1,3 +1,5 @@
+from tokenize import endpats
+
 from crc import *
 from ha_mqtt_discoverable import Settings, DeviceInfo
 from ha_mqtt_discoverable.sensors import BinarySensor, BinarySensorInfo, Sensor, SensorInfo, Switch, SwitchInfo, Number, NumberInfo
@@ -60,10 +62,20 @@ class PCWU:
                     sensor_info = SensorInfo(name=data["name"], unit_of_measurement=data["unit"], unique_id=data["id"],
                                              device=self.device_info)
                     settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
+                    # check if a sensor already exists
+                    if "sensor" in data:
+                        if (type(data["sensor"]) is Sensor):
+                            data["sensor"].__del__()
+                            data["sensor"] = None
                     data["sensor"] = Sensor(settings)
                 elif data['ha_type'] == 'binarysensor':
                     sensor_info = BinarySensorInfo(name=data["name"], unique_id=data["id"], device=self.device_info)
                     settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
+                    # check if a sensor already exists
+                    if "sensor" in data:
+                        if (type(data["sensor"]) is BinarySensor):
+                            data["sensor"].__del__()
+                            data["sensor"] = None
                     data["sensor"] = BinarySensor(settings)
                 elif data['ha_type'] == 'binarysensors':
                     for idx in range(len(data["id"])):
@@ -71,6 +83,10 @@ class PCWU:
                             sensor_info = BinarySensorInfo(name=data["name"][idx], unique_id=data["id"][idx],
                                                            device=self.device_info)
                             settings = Settings(mqtt=self.mqtt_settings, entity=sensor_info)
+                            # check if a sensor already exists
+                            if (type(data["sensor"][idx]) is BinarySensor):
+                                data["sensor"][idx].__del__()
+                                data["sensor"][idx] = None
                             data["sensor"][idx] = BinarySensor(settings)
 
             # initialize configurations
@@ -78,11 +94,21 @@ class PCWU:
                 if data['ha_type'] == 'switch':
                     switch_info = SwitchInfo(name=data["name"], unique_id=data["id"], device=self.device_info)
                     settings = Settings(mqtt=self.mqtt_settings, entity=switch_info)
+                    # check if switch already exists
+                    if "switch" in data:
+                        if (type(data["switch"]) is Switch):
+                            data["switch"].__del__()
+                            data["switch"] = None
                     data["switch"] = Switch(settings, self.HACallbackSwitch, data["id"])
                 elif data['ha_type'] == 'number':
                     number_info = NumberInfo(name=data["name"], unique_id=data["id"], min=int(data["options"][0]) / 10,
                                              max=int(data["options"][-1]) / 10, device=self.device_info)
                     settings = Settings(mqtt=self.mqtt_settings, entity=number_info)
+                    # check if number already exists
+                    if "number" in data:
+                        if (type(data["number"]) is Number):
+                            data["number"].__del__()
+                            data["number"] = None
                     data["number"] = Number(settings, self.HACallbackNumber, data["id"])
             self.logger.info("--- Initialized sensors")
             self.mqttconnected = True
